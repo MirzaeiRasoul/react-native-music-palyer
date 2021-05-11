@@ -1,16 +1,20 @@
-# OSX
-#
-.DS_Store
-
 # VS Code
-#
-.vscode
+.vscode/
 
 # node.js
-#
 node_modules/
 npm-debug.log
 yarn-error.log
+
+# Gradle files
+.gradle/
+build/
+
+# Local configuration file (sdk path, etc)
+local.properties
+
+# Log Files
+*.log
 
 # BUCK
 buck-out/
