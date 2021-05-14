@@ -1,6 +1,9 @@
 # VS Code
 .vscode/
 
+# Backup Files
+* (Backup)*
+
 # node.js
 node_modules/
 npm-debug.log
