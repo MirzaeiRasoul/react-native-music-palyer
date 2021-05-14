@@ -52,8 +52,6 @@ export default Player = () => {
 
     const pauseSound = () => { music.pause(); setIsPlaying(false); }
 
-    const stopSound = () => { music.stop(); setIsPlaying(false); }
-
     const nextSound = () => {
         music.release(); // Release the audio player resource
         let newTrackId = ((trackId == data.length - 1) ? 0 : trackId + 1);
