@@ -10,12 +10,15 @@ Sound.setCategory('Playback'); // Enable playback in silence mode
 import Styles from '../styles/Styles';
 
 export default Player = () => {
-    const [trackId, setTrackId] = useState(0);
-    const [isLoading, setIsLoading] = useState(true);
     const [data, setData] = useState();
+    const [soundId, setSoundId] = useState(0);
+    const [soundDuration, setSoundDuration] = useState(0);
+    const [isLoading, setIsLoading] = useState(true);
 
     const [isPlaying, setIsPlaying] = useState(false);
-    const [progress, setProgress] = useState(0);
+    const [soundProgress, setSoundProgress] = useState(0);
+    const [soundTime, setSoundTime] = useState(0);
+
 
     const downloadDir = RNFetchBlob.fs.dirs.DownloadDir;
 
@@ -31,10 +34,15 @@ export default Player = () => {
 
     useEffect(() => {
         if (!isLoading) {
-            music = new Sound(downloadDir + '/' + data[trackId]);
+            music = new Sound(downloadDir + '/' + data[soundId], Sound.MAIN_BUNDLE, () => {
+                setSoundDuration(music.getDuration());
+            });
             const interval = setInterval(() => {
-                music.getCurrentTime((seconds) => setProgress(seconds / music.getDuration()));
-            }, 1000)
+                music.getCurrentTime((seconds) => {
+                    setSoundProgress(seconds / music.getDuration());
+                    setSoundTime(seconds);
+                });
+            }, 500)
             return () => {
                 clearInterval(interval);
                 setIsPlaying(false);
@@ -42,6 +50,14 @@ export default Player = () => {
             }
         }
     }, [isLoading])
+
+    const getTime = (time) => {
+        let minutes = Math.floor(time / 60);
+        minutes = minutes > 9 ? minutes : "0" + minutes;
+        let seconds = Math.floor(time % 60);
+        seconds = seconds > 9 ? seconds : "0" + seconds;
+        return minutes + ':' + seconds;
+    }
 
     const playSound = () => {
         music.play(() => {
@@ -54,51 +70,58 @@ export default Player = () => {
 
     const nextSound = () => {
         music.release(); // Release the audio player resource
-        let newTrackId = ((trackId == data.length - 1) ? 0 : trackId + 1);
-        music = new Sound(downloadDir + '/' + data[newTrackId]);
-        setTrackId(newTrackId);
-        setTimeout(() => playSound(), 250);
+        let newSoundId = (soundId == data.length - 1) ? 0 : soundId + 1;
+        music = new Sound(downloadDir + '/' + data[newSoundId], Sound.MAIN_BUNDLE, () => {
+            setSoundProgress(0);
+            setSoundDuration(music.getDuration());
+            setSoundId(newSoundId);
+            playSound();
+        });
     }
 
     const previousSound = () => {
         music.release(); // Release the audio player resource
-        let newTrackId = ((trackId == 0) ? data.length - 1 : trackId - 1);
-        music = new Sound(downloadDir + '/' + data[newTrackId]);
-        setTrackId(newTrackId);
-        setTimeout(() => {
+        let newSoundId = ((soundId == 0) ? data.length - 1 : soundId - 1);
+        music = new Sound(downloadDir + '/' + data[newSoundId], Sound.MAIN_BUNDLE, () => {
+            setSoundProgress(0);
+            setSoundDuration(music.getDuration());
+            setSoundId(newSoundId);
             playSound();
-        }, 250);
+        });
     }
 
     return (
         <SafeAreaView>
             {isLoading ? <ActivityIndicator size="large" color="#0000ff" /> : (
                 <View style={styles.bodyContainer}>
-                    <View style={styles.infoContainer}>
-                        <Text numberOfLines={1} style={styles.trackTitle}>{data[trackId].substring(0, data[trackId].length - 4)}</Text>
-                        <Text style={styles.trackSinger}>hghgh h hhh k j</Text>
+                    <View style={styles.infoSection}>
+                        <Text numberOfLines={1} style={styles.title}>{data[soundId].substring(0, data[soundId].length - 4)}</Text>
+                        <Text style={styles.singer}>Hello World!</Text>
                     </View>
-                    <View style={styles.coverContainer}>
+                    <View style={styles.coverSection}>
                         <Image style={styles.trackCover} source={{ uri: 'https://aloonak.com/wp-content/uploads/2014/11/Mohsen-Yeganeh-Hobab.jpg' }} />
                     </View>
-                    <View style={styles.playerContainer}>
+                    <View style={styles.controllerSection}>
                         <Slider
-                            style={{ width: '100%' }}
-                            value={progress}
-                            minimumValue={0}
-                            maximumValue={1}
-                            minimumTrackTintColor="#453574"
-                            maximumTrackTintColor="#45357488"
+                            style={styles.slider}
+                            value={soundProgress}
+                            thumbTintColor="#333"
+                            minimumTrackTintColor="#333"
+                            maximumTrackTintColor="#333"
                             onValueChange={(newValue) => music.setCurrentTime(newValue * music.getDuration())}
                         />
-                        <View style={styles.playerButtons}>
-                            <IconButton icon="skip-previous" color="#333" size={35} onPress={previousSound} />
+                        <View style={styles.times}>
+                            <Text style={styles.time}>{getTime(soundTime)}</Text>
+                            <Text style={styles.time}>{getTime(soundDuration)}</Text>
+                        </View>
+                        <View style={styles.buttons}>
+                            <IconButton style={styles.button} icon="skip-previous" color="#333" size={35} onPress={previousSound} />
                             {isPlaying ?
-                                <IconButton icon="pause" color="#333" size={50} onPress={pauseSound} />
+                                <IconButton style={styles.boldButton} icon="pause" color="#fff" size={40} onPress={pauseSound} />
                                 :
-                                <IconButton icon="play" color="#333" size={50} onPress={playSound} />
+                                <IconButton style={styles.boldButton} icon="play" color="#fff" size={40} onPress={playSound} />
                             }
-                            <IconButton icon="skip-next" color="#333" size={35} onPress={nextSound} />
+                            <IconButton style={styles.button} icon="skip-next" color="#333" size={35} onPress={nextSound} />
                         </View>
                     </View>
                 </View>
